@@ -1,0 +1,25 @@
+// Power BI measures (all live on the Reconciliation table)
+
+Discrepancies =
+CALCULATE(
+    COUNTROWS(Reconciliation),
+    KEEPFILTERS(Reconciliation[Status] <> "Match")
+)
+
+Containers Checked = COUNTROWS(Reconciliation)
+
+Discrepancy Rate = DIVIDE([Discrepancies], [Containers Checked])
+
+Open Findings = CALCULATE(COUNTROWS(Findings), Findings[status] = "Open")
+
+Avg Days to Close =
+AVERAGEX(
+    FILTER(Findings, Findings[status] = "Closed"),
+    DATEDIFF(Findings[date_found], Findings[date_closed], DAY)
+)
+
+Stale Contacts = CALCULATE(COUNTROWS(People), People[Stale] = TRUE())
+
+// DIVIDE returns blank instead of an error when a lab has zero rows.
+// KEEPFILTERS keeps the chart axis filter on Status; without it the measure overrides that filter
+// and a chart split by Status shows the same total (77) on every bar, including Match.
